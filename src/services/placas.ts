@@ -7,11 +7,13 @@ export interface Placa {
     placa: string
     checkIn: Date
     checkOut: Date | null
+    price: number | null
 }
 export interface PlacaCreate {
     placa: string
     checkIn: Date
     checkOut: Date | null
+    price: number | null
 }
 
 // find
@@ -31,6 +33,24 @@ async function create(placa: PlacaCreate): Promise<Placa[]> {
         const storage = await find()
         const newStorage = [...storage, novaPlaca]
         await AsyncStorage.setItem(PLACAS_STORAGE_KAY, JSON.stringify(newStorage))
+        console.log('create ', newStorage)
+        return newStorage
+    } catch (error) {
+        return []
+    }
+}
+
+// checkOut
+async function checkOut(placa: Placa): Promise<Placa[]> {
+    try {
+        const placaCheckout: Placa = {
+            ...placa,
+            checkOut: new Date()
+        }
+        const storage = await find()
+        const newStorage = storage.map(p => p.id === placaCheckout.id ? placaCheckout : p)
+        await AsyncStorage.setItem(PLACAS_STORAGE_KAY, JSON.stringify(newStorage))
+        console.log('checkout: ', newStorage)
         return newStorage
     } catch (error) {
 
@@ -38,21 +58,24 @@ async function create(placa: PlacaCreate): Promise<Placa[]> {
     return []
 }
 
-// close
-async function close(placa: Placa): Promise<Placa[]> {
-    try {
-        const novaPlaca: Placa = {
-            ...placa,
-            checkOut: new Date()
-        }
-        const storage = await find()
-        const newStorage = [...storage, novaPlaca]
-        await AsyncStorage.setItem(PLACAS_STORAGE_KAY, JSON.stringify(newStorage))
-        return newStorage
-    } catch (error) {
+// checkPrice
+async function checkPrice(placa: Placa) {
+    // 1. O checkIn já vem como Date (ou string/ISO que precisamos garantir que vire Date)
+    const dataIn = new Date(placa.checkIn);
 
-    }
-    return []
+    // 2. O checkOut está acontecendo AGORA
+    const dataOut = new Date();
+
+    // 3. Diferença em milissegundos
+    const diferencaMs = dataOut.getTime() - dataIn.getTime();
+
+    // 4. Conversão para horas e minutos totais
+    const totalMinutos = Math.floor(diferencaMs / (1000 * 60));
+    const horas = Math.floor(totalMinutos / 60);
+    const minutosRestantes = totalMinutos % 60;
+
+    
+
 }
 // update
 // delete
@@ -60,8 +83,8 @@ async function close(placa: Placa): Promise<Placa[]> {
 const placaService = {
     find,
     create,
-    close
-
+    checkOut,
+    checkPrice
 }
 
 export default placaService

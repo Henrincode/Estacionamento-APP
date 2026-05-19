@@ -1,3 +1,4 @@
+import List from "@/components/list"
 import ScrollArea from "@/components/ScrollArea"
 import placaService, { Placa, PlacaCreate } from "@/services/placas"
 import { useEffect, useState } from "react"
@@ -20,12 +21,21 @@ export default function Index() {
         const newPlaca: PlacaCreate = {
             placa: input,
             checkIn: new Date(),
-            checkOut: null
+            checkOut: null,
+            price: null
         }
 
         const response = await placaService.create(newPlaca)
         setPlacas(response)
         setInput('')
+    }
+
+    async function checkOut(placa: Placa) {
+
+
+
+        const response = await placaService.checkOut(placa)
+        setPlacas(response)
     }
 
     useEffect(() => { load() }, [])
@@ -43,30 +53,9 @@ export default function Index() {
             </View>
 
             {/* list */}
-            {placas.map(p => {
-                const dataCheckIn = new Date(p.checkIn)
-                const dataCheckOut = p.checkOut ? new Date(p.checkOut) : ''
-                const horas = String(dataCheckIn.getHours()).padStart(2, '0')
-                const minutos = String(dataCheckIn.getMinutes()).padStart(2, '0')
-
-                return (
-                    <View key={p.id} style={styles.listContainer}>
-
-                        <Text style={styles.listCheckIn}>
-                            {`${horas}:${minutos}`}
-                        </Text>
-                        <Text style={styles.listCheckIn}>
-                            {`${horas}:${minutos}`}
-                        </Text>
-
-                        <Text style={styles.listPlaca}>{p.placa}</Text>
-
-                        <TouchableOpacity style={styles.listButton}>
-                            <Text style={styles.listButtonText}>Finalizar</Text>
-                        </TouchableOpacity>
-                    </View>
-                )
-            })}
+            <List placas={placas} setPlacas={setPlacas} checkOut="false" />
+            <View style={{ backgroundColor: '#444', height: 5, borderRadius: 10 }}></View>
+            <List placas={placas} setPlacas={setPlacas} checkOut="true" />
         </ScrollArea >
     )
 }
