@@ -42,7 +42,7 @@ export default function Index() {
 
     return (
         <ScrollArea style={styles.container}>
-            <Text onPress={placaService.clear} style={styles.logoText}>Vagas do BoxTo</Text>
+            <Text style={styles.logoText}>Vagas do BoxTo</Text>
             <View style={styles.inputView}>
                 <TextInput onChangeText={text => setInput(text.toUpperCase())} value={input} style={styles.inputText} />
                 <TouchableOpacity onPress={create} style={styles.inputButton}>
