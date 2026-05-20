@@ -74,9 +74,30 @@ async function checkPrice(placa: Placa) {
     const horas = Math.floor(totalMinutos / 60);
     const minutosRestantes = totalMinutos % 60;
 
-    
+    // até uma hora 5, a cada 1 hora 3
 
+    return 5 + (horas * 3)
 }
+
+// restore
+async function restore(placa: Placa): Promise<Placa[]> {
+    try {
+        const newPlaca: Placa = { ...placa, checkOut: null }
+        const storage = await find()
+        const newStorage = storage.map(p => p.id === placa.id ? newPlaca : p)
+        await AsyncStorage.setItem(PLACAS_STORAGE_KAY, JSON.stringify(newStorage))
+        console.log('storagee', storage.filter(p => p.id === placa.id))
+        console.log('newStorage', newStorage.filter(p => p.id === placa.id))
+        return newStorage
+    } catch (error) {
+        return []
+    }
+}
+
+async function clear() {
+    await AsyncStorage.removeItem(PLACAS_STORAGE_KAY)
+}
+// 
 // update
 // delete
 
@@ -84,7 +105,9 @@ const placaService = {
     find,
     create,
     checkOut,
-    checkPrice
+    checkPrice,
+    restore,
+    clear
 }
 
 export default placaService

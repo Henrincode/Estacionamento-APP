@@ -1,5 +1,5 @@
 import placaService, { Placa } from "@/services/placas"
-import { Text, TouchableOpacity, View } from "react-native"
+import { Alert, Text, TouchableOpacity, View } from "react-native"
 import { styles } from "./styles"
 
 interface Props {
@@ -10,8 +10,23 @@ interface Props {
 
 export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
 
-    async function fncheckOut(placa: Placa) {
-        const response = await placaService.checkOut(placa)
+    async function fnCheckOut(placa: Placa) {
+        const preco = await placaService.checkPrice(placa)
+        Alert.alert(`Fechar placa: ${placa.placa}?`, `Valor a ser cobrado: R$${preco.toFixed(2)}`, [{
+            text: 'Cancelar',
+            style: "cancel"
+        }, {
+            text: 'ok',
+            onPress: async () => {
+                const newPlaca: Placa = {...placa, price: preco}
+                const response = await placaService.checkOut(newPlaca)
+                setPlacas(response)
+            }
+        }])
+    }
+
+    async function fnRestore(placa: Placa) {
+        const response = await placaService.restore(placa)
         setPlacas(response)
     }
 
@@ -33,7 +48,7 @@ export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
                         {/* preço e horas */}
                         <View style={styles.listPriceOurs}>
                             {/* preço */}
-                            {p.checkOut && <Text style={styles.listPrice}>R$ 30,00</Text>}
+                            {p.checkOut && <Text style={styles.listPrice}>R${p.price?.toFixed(2)}</Text>}
                             {/* horas */}
                             <View>
                                 <Text style={styles.listCheckIn}>
@@ -44,7 +59,7 @@ export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
 
                         <Text onPress={() => placaService.checkPrice(p)} style={styles.listPlaca}>{p.placa}</Text>
 
-                        <TouchableOpacity onPress={() => fncheckOut(p)} style={styles.listButton}>
+                        <TouchableOpacity onPress={() => p.checkOut ? fnRestore(p) : fnCheckOut(p)} style={styles.listButton}>
                             <Text style={styles.listButtonText}>{p.checkOut ? 'Reabrir' : 'CheckOut'}</Text>
                         </TouchableOpacity>
                     </View>
