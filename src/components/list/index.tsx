@@ -1,6 +1,8 @@
 import placaService, { Placa } from "@/services/placas"
+import { useEffect, useState } from "react"
 import { Alert, Text, TouchableOpacity, View } from "react-native"
 import { styles } from "./styles"
+import Card from "../card"
 
 interface Props {
     placas: Placa[]
@@ -10,6 +12,16 @@ interface Props {
 
 export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
 
+    const [agora, setAgora] = useState(Date.now());
+
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            setAgora(Date.now()); // Atualiza o timestamp atual a cada segundo
+        }, 1000);
+
+        return () => clearInterval(intervalo);
+    }, []);
+
     async function fnCheckOut(placa: Placa) {
         const preco = await placaService.checkPrice(placa)
         Alert.alert(`Fechar placa: ${placa.placa}?`, `Valor a ser cobrado: R$${preco.toFixed(2)}`, [{
@@ -18,7 +30,7 @@ export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
         }, {
             text: 'ok',
             onPress: async () => {
-                const newPlaca: Placa = {...placa, price: preco}
+                const newPlaca: Placa = { ...placa, price: preco }
                 const response = await placaService.checkOut(newPlaca)
                 setPlacas(response)
             }
@@ -29,6 +41,24 @@ export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
         const response = await placaService.restore(placa)
         setPlacas(response)
     }
+
+    const tpc = (dataCadastro: Date) => {
+        const diferencaEmMilissegundos = agora - new Date(dataCadastro).getTime();
+
+        // Evita valores negativos por pequenos atrasos de renderização
+        const totalSegundos = Math.max(0, Math.floor(diferencaEmMilissegundos / 1000));
+
+        const horas = Math.floor(totalSegundos / 3600);
+        const minutos = Math.floor((totalSegundos % 3600) / 60);
+        const segundos = totalSegundos % 60;
+
+        // Formata para garantir que sempre tenham 2 dígitos (ex: 02:05:09)
+        const hDisplay = String(horas).padStart(2, '0');
+        const mDisplay = String(minutos).padStart(2, '0');
+        const sDisplay = String(segundos).padStart(2, '0');
+
+        return `${hDisplay}:${mDisplay}:${sDisplay}`;
+    };
 
     return (
         placas
@@ -43,26 +73,7 @@ export default function List({ placas, setPlacas, checkOut = 'all' }: Props) {
                 const mOut = dataCheckOut ? String(dataCheckOut.getMinutes()).padStart(2, '0') : '--'
 
                 return (
-                    <View key={p.id} style={[styles.listContainer, p.checkOut && { backgroundColor: "#33333370" }]}>
-
-                        {/* preço e horas */}
-                        <View style={styles.listPriceOurs}>
-                            {/* preço */}
-                            {p.checkOut && <Text style={styles.listPrice}>R${p.price?.toFixed(2)}</Text>}
-                            {/* horas */}
-                            <View>
-                                <Text style={styles.listCheckIn}>
-                                    {`${hIn}:${mIn}${dataCheckOut ? `  |  ${hOut}:${mOut}` : ''}`}
-                                </Text>
-                            </View>
-                        </View>
-
-                        <Text onPress={() => placaService.checkPrice(p)} style={styles.listPlaca}>{p.placa}</Text>
-
-                        <TouchableOpacity onPress={() => p.checkOut ? fnRestore(p) : fnCheckOut(p)} style={styles.listButton}>
-                            <Text style={styles.listButtonText}>{p.checkOut ? 'Reabrir' : 'CheckOut'}</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <Card key={p.id} placa={p} fnCheckOut={fnCheckOut} fnRestore={fnRestore} />
                 )
             })
     )

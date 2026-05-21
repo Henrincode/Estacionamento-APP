@@ -9,7 +9,7 @@ export default function Layout() {
         <SafeAreaProvider>
             <KeyboardProvider>
                 <Stack screenOptions={{ headerShown: false }} />
-                {/* <Nav /> */}
+                <Nav />
             </KeyboardProvider>
         </SafeAreaProvider>
     )
